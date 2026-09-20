@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>BUY — Stock Advisory Prototype</title>
+  <style>
+    :root{
+      --bg:#07100d;
+      --panel:#0d1814;
+      --panel2:#111f19;
+      --line:#22332b;
+      --text:#edf6f1;
+      --muted:#93a99e;
+      --green:#62e6a5;
+      --green2:#1dbf73;
+      --amber:#f2c96d;
+      --red:#ff7f84;
+      --blue:#79baff;
+      --shadow:0 18px 50px rgba(0,0,0,.28);
+      --radius:18px;
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      background:
+        radial-gradient(900px 520px at 10% -10%, rgba(45,190,115,.12), transparent 60%),
+        radial-gradient(900px 520px at 95% 0%, rgba(85,150,255,.08), transparent 58%),
+        var(--bg);
+      color:var(--text);
+      font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      min-height:100vh;
+    }
+    button,select{font:inherit}
+    .shell{max-width:1440px;margin:0 auto;padding:24px}
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:22px}
+    .brand{display:flex;align-items:center;gap:14px}
+    .mark{width:44px;height:44px;border-radius:13px;background:linear-gradient(145deg,var(--green),#20a86b);display:grid;place-items:center;color:#052015;font-weight:900;box-shadow:0 10px 30px rgba(29,191,115,.25)}
+    .brand h1{font-size:20px;margin:0;letter-spacing:.12em}
+    .brand p{margin:4px 0 0;color:var(--muted);font-size:12px}
+    .status{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:12px}
+    .dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 0 5px rgba(98,230,165,.09)}
+
+    .grid{display:grid;grid-template-columns:310px 1fr;gap:22px}
+    .panel{background:linear-gradient(180deg,rgba(255,255,255,.025),rgba(255,255,255,.01)),var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+    .controls{padding:20px;position:sticky;top:20px;height:max-content}
+    .eyebrow{text-transform:uppercase;font-size:10px;letter-spacing:.18em;color:var(--muted);font-weight:800}
+    .controls h2{font-size:18px;margin:8px 0 4px}
+    .controls .sub{font-size:12px;line-height:1.55;color:var(--muted);margin-bottom:20px}
+    .group{margin:20px 0}
+    .group-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px;font-size:12px;font-weight:800}
+    .pillset{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+    .pillset.horizon{grid-template-columns:1fr}
+    .pill{border:1px solid var(--line);background:#0a1511;color:var(--muted);padding:10px 9px;border-radius:10px;cursor:pointer;text-align:center;font-size:12px;font-weight:700;transition:.18s}
+    .pill:hover{border-color:#3c5749;color:var(--text)}
+    .pill.active{border-color:rgba(98,230,165,.55);background:rgba(98,230,165,.12);color:var(--green)}
+    .pill.h{display:flex;justify-content:space-between;align-items:center;text-align:left;padding:11px 12px}
+    .pill small{display:block;font-weight:500;color:var(--muted);margin-top:3px}
+    .pill.active small{color:#9cd8bb}
+    .primary{width:100%;border:0;background:linear-gradient(135deg,var(--green),var(--green2));color:#062317;font-weight:900;padding:13px 16px;border-radius:11px;cursor:pointer;box-shadow:0 10px 30px rgba(29,191,115,.18)}
+    .primary:disabled{opacity:.55;cursor:wait}
+    .secondary{width:100%;margin-top:8px;border:1px solid var(--line);background:transparent;color:var(--muted);font-weight:750;padding:10px;border-radius:10px;cursor:pointer}
+    .fine{font-size:10px;line-height:1.5;color:#70847a;margin-top:14px}
+
+    .main{min-width:0}
+    .hero{padding:25px 26px 23px;overflow:hidden;position:relative}
+    .hero:after{content:"";position:absolute;width:360px;height:360px;border-radius:50%;background:rgba(98,230,165,.06);right:-160px;top:-180px;filter:blur(4px)}
+    .hero-head{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;position:relative;z-index:1}
+    .hero h2{font-size:26px;line-height:1.1;margin:6px 0 7px}
+    .hero p{margin:0;color:var(--muted);font-size:13px}
+    .asof{text-align:right;font-size:11px;color:var(--muted)}
+    .hero-body{display:grid;grid-template-columns:1.2fr .8fr;gap:24px;align-items:end;margin-top:24px;position:relative;z-index:1}
+    .tickerline{display:flex;align-items:center;gap:11px;flex-wrap:wrap}
+    .ticker{font-size:34px;font-weight:900;letter-spacing:-.03em}
+    .exchange{font-size:11px;background:#16251e;border:1px solid #294137;color:#a5b9af;border-radius:999px;padding:6px 8px}
+    .advisory{font-size:11px;font-weight:900;border-radius:999px;padding:7px 9px;letter-spacing:.06em}
+    .advisory.buy{background:rgba(98,230,165,.13);color:var(--green);border:1px solid rgba(98,230,165,.32)}
+    .advisory.watch{background:rgba(242,201,109,.12);color:var(--amber);border:1px solid rgba(242,201,109,.3)}
+    .advisory.pass{background:rgba(255,127,132,.1);color:var(--red);border:1px solid rgba(255,127,132,.25)}
+    .company{font-size:13px;color:#c2d3ca;margin:4px 0 16px}
+    .price{font-size:18px;font-weight:800}.price span{color:var(--muted);font-size:11px;font-weight:600;margin-left:6px}
+    .scorebox{display:flex;justify-content:flex-end;align-items:center;gap:14px}
+    .ring{width:105px;height:105px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--green) calc(var(--score)*1%),#1a2a22 0);position:relative}
+    .ring:before{content:"";position:absolute;inset:8px;border-radius:50%;background:var(--panel)}
+    .ring strong{position:relative;font-size:27px}.ring small{position:relative;display:block;color:var(--muted);font-size:9px;text-transform:uppercase;letter-spacing:.14em;text-align:center;margin-top:-8px}
+    .signalnote{max-width:180px;color:var(--muted);font-size:11px;line-height:1.45}
+    .signalnote strong{display:block;color:var(--text);font-size:12px;margin-bottom:4px}
+    .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:21px;position:relative;z-index:1}
+    .metric{border-top:1px solid var(--line);padding-top:12px}
+    .metric label{display:block;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px}
+    .metric b{font-size:14px}
+
+    .section{margin-top:20px;padding:22px}
+    .section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+    .section h3{font-size:15px;margin:0}.section-head span{color:var(--muted);font-size:11px}
+    .insight-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .insight{background:var(--panel2);border:1px solid var(--line);border-radius:13px;padding:15px}
+    .insight h4{margin:0 0 10px;font-size:12px}.insight ul{margin:0;padding-left:18px;color:#c4d4cc;font-size:12px;line-height:1.65}
+    .insight.risk h4{color:var(--amber)}
+
+    .tabs{display:flex;gap:7px}
+    .tab{border:1px solid var(--line);background:transparent;color:var(--muted);padding:7px 11px;border-radius:9px;cursor:pointer;font-size:11px;font-weight:800}
+    .tab.active{background:#17261f;color:var(--text);border-color:#344a40}
+    .tablewrap{overflow:auto;border:1px solid var(--line);border-radius:13px}
+    .market-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+    .market-block{min-width:0}
+    .market-title{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 9px}
+    .market-title h4{margin:0;font-size:13px}
+    .market-title span{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
+    @media(max-width:1120px){.market-grid{grid-template-columns:1fr}}
+    table{width:100%;border-collapse:collapse;min-width:840px}
+    th{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.11em;text-align:left;padding:11px 12px;background:#0b1512;position:sticky;top:0}
+    td{padding:13px 12px;border-top:1px solid var(--line);font-size:12px;vertical-align:middle}
+    tr.data{cursor:pointer;transition:.15s}tr.data:hover{background:#101e18}
+    .namecell b{display:block;font-size:13px}.namecell small{color:var(--muted);display:block;margin-top:2px;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .scorechip{font-weight:900;color:var(--green)}
+    .mini{width:110px;height:28px;display:block}
+    .up{color:var(--green)}.down{color:var(--red)}.neutral{color:var(--muted)}
+    .badge{padding:5px 7px;border-radius:999px;font-size:9px;font-weight:900;letter-spacing:.05em;white-space:nowrap}
+    .badge.buy{color:var(--green);background:rgba(98,230,165,.11)}
+    .badge.watch{color:var(--amber);background:rgba(242,201,109,.1)}
+    .badge.pass{color:var(--red);background:rgba(255,127,132,.09)}
+
+    .detail{display:none;margin-top:12px;background:#0b1512;border:1px solid var(--line);border-radius:13px;padding:16px}
+    .detail.open{display:block}
+    .detail-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+    .detail-box{background:#111e19;border-radius:10px;padding:11px;border:1px solid #1d3027}
+    .detail-box span{display:block;color:var(--muted);font-size:9px;text-transform:uppercase;letter-spacing:.09em}.detail-box b{display:block;margin-top:4px;font-size:13px}
+    .news{margin-top:13px;border-top:1px solid var(--line);padding-top:12px}.news h4{font-size:11px;margin:0 0 7px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}.news div{font-size:11px;color:#c4d2cb;margin:6px 0}
+
+    .method{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+    .weight{padding:14px;border:1px solid var(--line);border-radius:12px;background:#0c1713}.weight b{font-size:20px;display:block}.weight span{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
+    footer{color:#64786e;font-size:10px;line-height:1.6;padding:18px 3px 5px}
+
+    .loading{display:none;padding:34px;text-align:center}.loading.open{display:block}.spinner{width:30px;height:30px;border-radius:50%;border:3px solid #203129;border-top-color:var(--green);animation:spin 1s linear infinite;margin:0 auto 12px}@keyframes spin{to{transform:rotate(360deg)}}
+    .error{display:none;padding:16px;margin-bottom:15px;border:1px solid rgba(255,127,132,.28);background:rgba(255,127,132,.08);color:#ffb5b8;border-radius:12px;font-size:12px}.error.open{display:block}
+
+    @media(max-width:1050px){.grid{grid-template-columns:1fr}.controls{position:static}.hero-body{grid-template-columns:1fr}.scorebox{justify-content:flex-start}.metrics{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:680px){.shell{padding:13px}.topbar{align-items:flex-start}.status{display:none}.hero,.section,.controls{padding:16px}.hero h2{font-size:22px}.ticker{font-size:29px}.insight-grid,.detail-grid,.method{grid-template-columns:1fr 1fr}.metrics{grid-template-columns:1fr 1fr}}
+  </style>
+</head>
+<body>
+<div class="shell">
+  <div class="topbar">
+    <div class="brand">
+      <div class="mark">B</div>
+      <div><h1>BUY</h1><p>Evidence-weighted stock advisory prototype</p></div>
+    </div>
+    <div class="status"><span class="dot"></span><span id="backendStatus">Local Python backend</span></div>
+  </div>
+
+  <div class="grid">
+    <aside class="panel controls">
+      <div class="eyebrow">Investor profile</div>
+      <h2>Shape the advisory</h2>
+      <div class="sub">The model reweights momentum, quality, balance-sheet resilience and valuation for your selected risk and holding period.</div>
+
+      <div class="group">
+        <div class="group-title"><span>Risk level</span><span id="riskLabel" style="color:var(--green)">Low</span></div>
+        <div class="pillset" id="riskSet">
+          <button class="pill active" data-value="low">Low</button>
+          <button class="pill" data-value="medium">Medium</button>
+          <button class="pill" data-value="high">High</button>
+        </div>
+      </div>
+
+      <div class="group">
+        <div class="group-title"><span>Investment horizon</span></div>
+        <div class="pillset horizon" id="horizonSet">
+          <button class="pill h" data-value="day_trade"><span>Day trade<small>Intraday momentum + volume</small></span><b>1D</b></button>
+          <button class="pill h" data-value="short_term"><span>Short term<small>Days to a few months</small></span><b>1–3M</b></button>
+          <button class="pill h active" data-value="long_term"><span>Long term<small>Quality + durable trend</small></span><b>6M+</b></button>
+        </div>
+      </div>
+
+      <button class="primary" id="runBtn">Run advisory</button>
+      <button class="secondary" id="refreshBtn">Force fresh market scan</button>
+      <div class="fine">Default: <b>Low Risk + Long Term.</b> “Low risk” means lower relative risk within this equity universe; it does not make equity investing low-risk in absolute terms.</div>
+    </aside>
+
+    <main class="main">
+      <div class="error" id="errorBox"></div>
+      <div class="panel loading" id="loadingBox"><div class="spinner"></div><b>Running the market screen…</b><div style="color:var(--muted);font-size:11px;margin-top:5px">Scanning, ranking, then enriching finalists with fundamentals and headlines.</div></div>
+
+      <section class="panel hero" id="hero">
+        <div class="hero-head">
+          <div><div class="eyebrow">Highest model score today</div><h2 id="headline">Low-risk, long-term equity screen</h2><p id="subtitle">Run the advisory to load current TSX and U.S. candidates.</p></div>
+          <div class="asof">As of<br><b id="asof">—</b></div>
+        </div>
+        <div class="hero-body">
+          <div>
+            <div class="tickerline"><span class="ticker" id="heroTicker">—</span><span class="exchange" id="heroMarket">—</span><span class="advisory watch" id="heroAdvisory">WAITING</span></div>
+            <div class="company" id="heroCompany">No market scan loaded yet</div>
+            <div class="price" id="heroPrice">— <span>latest daily quote in source data</span></div>
+          </div>
+          <div class="scorebox">
+            <div class="ring" id="scoreRing" style="--score:0"><div style="position:relative;text-align:center"><strong id="heroScore">0</strong><small>model score</small></div></div>
+            <div class="signalnote"><strong id="signalTitle">No signal yet</strong><span id="signalText">The model will explicitly say when the evidence is not strong enough.</span></div>
+          </div>
+        </div>
+        <div class="metrics">
+          <div class="metric"><label>6M return</label><b id="m6">—</b></div>
+          <div class="metric"><label>Risk quality</label><b id="mrisk">—</b></div>
+          <div class="metric"><label>Fundamental</label><b id="mfund">—</b></div>
+          <div class="metric"><label>Forward P/E</label><b id="mpe">—</b></div>
+        </div>
+      </section>
+
+      <section class="panel section">
+        <div class="section-head"><h3>Why it ranks here</h3><span>Evidence + failure modes</span></div>
+        <div class="insight-grid">
+          <div class="insight"><h4 style="color:var(--green)">Supporting evidence</h4><ul id="reasons"><li>Run the advisory to see the model rationale.</li></ul></div>
+          <div class="insight risk"><h4>What could go wrong</h4><ul id="risks"><li>All equity models can be wrong; this one is designed to expose rather than hide that uncertainty.</li></ul></div>
+        </div>
+      </section>
+
+      <section class="panel section">
+        <div class="section-head">
+          <div><h3>Top 5 by market</h3><span>Canada and United States shown together · click any row for more detail</span></div>
+        </div>
+        <div class="market-grid">
+          <div class="market-block">
+            <div class="market-title"><h4>🇨🇦 Canada · Top 5</h4><span>S&amp;P/TSX 60 screen</span></div>
+            <div class="tablewrap">
+              <table>
+                <thead><tr><th>Rank</th><th>Company</th><th>Score</th><th>Advisory</th><th>Trend</th><th>6M</th><th>Volatility</th><th>Fwd P/E</th></tr></thead>
+                <tbody id="canadaRankBody"><tr><td colspan="8" style="color:var(--muted);text-align:center;padding:28px">No data loaded.</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="market-block">
+            <div class="market-title"><h4>🇺🇸 United States · Top 5</h4><span>S&amp;P 500 + Nasdaq-100 screen</span></div>
+            <div class="tablewrap">
+              <table>
+                <thead><tr><th>Rank</th><th>Company</th><th>Score</th><th>Advisory</th><th>Trend</th><th>6M</th><th>Volatility</th><th>Fwd P/E</th></tr></thead>
+                <tbody id="usRankBody"><tr><td colspan="8" style="color:var(--muted);text-align:center;padding:28px">No data loaded.</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="detail" id="detailPanel"></div>
+      </section>
+
+      <section class="panel section">
+        <div class="section-head"><h3>Current weighting</h3><span id="methodNote">Profile-dependent scoring</span></div>
+        <div class="method">
+          <div class="weight"><b id="wTech">—</b><span>Technical</span></div>
+          <div class="weight"><b id="wQual">—</b><span>Quality</span></div>
+          <div class="weight"><b id="wBal">—</b><span>Balance / risk</span></div>
+          <div class="weight"><b id="wVal">—</b><span>Valuation</span></div>
+        </div>
+      </section>
+
+      <footer>
+        Prototype only. Scores are relative screening signals, not probabilities of profit, guarantees of appreciation, or trade-execution instructions. Analyst targets and headlines are contextual inputs and may be stale, incomplete or wrong. Day-trading signals are especially sensitive to spreads, slippage, news and rapid reversals. Independently verify any security before placing an order.
+      </footer>
+    </main>
+  </div>
+</div>
+
+<script>
+  const state={risk:'low',horizon:'long_term',data:null};
+  const $=id=>document.getElementById(id);
+  const pct=(x,d=1)=>x==null?'—':`${x>=0?'+':''}${(x*100).toFixed(d)}%`;
+  const num=(x,d=1)=>x==null?'—':Number(x).toFixed(d);
+  const money=(x,market='US')=>x==null?'—':new Intl.NumberFormat(market==='CANADA'?'en-CA':'en-US',{style:'currency',currency:market==='CANADA'?'CAD':'USD',maximumFractionDigits:2}).format(x);
+  const cls=x=>x>0?'up':x<0?'down':'neutral';
+  const advClass=s=>s?.startsWith('BUY')?'buy':s==='WATCH'?'watch':'pass';
+
+  function setChoice(group,value){
+    document.querySelectorAll(`#${group} .pill`).forEach(b=>b.classList.toggle('active',b.dataset.value===value));
+  }
+  $('riskSet').addEventListener('click',e=>{const b=e.target.closest('.pill');if(!b)return;state.risk=b.dataset.value;setChoice('riskSet',state.risk);$('riskLabel').textContent=state.risk[0].toUpperCase()+state.risk.slice(1)});
+  $('horizonSet').addEventListener('click',e=>{const b=e.target.closest('.pill');if(!b)return;state.horizon=b.dataset.value;setChoice('horizonSet',state.horizon)});
+
+  function sparkSVG(values){
+    if(!values||values.length<2)return '<span style="color:var(--muted)">—</span>';
+    const w=110,h=28,min=Math.min(...values),max=Math.max(...values),span=max-min||1;
+    const pts=values.map((v,i)=>`${(i/(values.length-1)*w).toFixed(1)},${(h-(v-min)/span*h).toFixed(1)}`).join(' ');
+    const up=values.at(-1)>=values[0];
+    return `<svg class="mini" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><polyline fill="none" stroke="${up?'#62e6a5':'#ff7f84'}" stroke-width="1.8" points="${pts}"/></svg>`;
+  }
+
+  function setList(id,items){$(id).innerHTML=(items||[]).map(x=>`<li>${escapeHtml(x)}</li>`).join('')||'<li>—</li>'}
+  function escapeHtml(s){return String(s??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','"':'&quot;'}[c]))}
+
+  function renderHero(){
+    const d=state.data, x=d?.highest;if(!x)return;
+    $('asof').textContent=new Date(d.generated_at).toLocaleString();
+    $('headline').textContent=`${state.risk[0].toUpperCase()+state.risk.slice(1)} risk · ${state.horizon.replace('_',' ')} screen`;
+    $('subtitle').textContent=d.strong_signal?'At least one candidate cleared the profile-specific signal threshold.':'No candidate cleared the strongest profile-specific threshold; treat the ranking as a research shortlist.';
+    $('heroTicker').textContent=x.ticker;$('heroMarket').textContent=x.market;$('heroCompany').textContent=`${x.company} · ${x.sector}`;$('heroPrice').innerHTML=`${money(x.price,x.market)} <span>latest daily quote in source data</span>`;
+    $('heroAdvisory').textContent=x.advisory;$('heroAdvisory').className=`advisory ${advClass(x.advisory)}`;
+    $('heroScore').textContent=x.score.toFixed(1);$('scoreRing').style.setProperty('--score',x.score);
+    $('signalTitle').textContent=d.strong_signal?'Strongest screen candidate':'No strong buy signal';
+    $('signalText').textContent=d.strong_signal?'This is the model’s highest-ranked candidate for the selected profile, not a guarantee of appreciation.':'The model is declining to force a “buy” label when the combined evidence is below threshold.';
+    $('m6').textContent=pct(x.ret_126);$('m6').className=cls(x.ret_126);
+    $('mrisk').textContent=`${num(x.risk_quality_score)}/100`;$('mfund').textContent=`${num(x.fundamental_score)}/100`;$('mpe').textContent=x.forward_pe==null?'—':`${num(x.forward_pe)}×`;
+    setList('reasons',x.reasons);setList('risks',x.risks);
+  }
+
+  function renderMarketTable(bodyId,arr){
+    const body=$(bodyId);
+    const top5=(arr||[]).slice(0,5);
+    if(!top5.length){body.innerHTML='<tr><td colspan="8" style="color:var(--muted);text-align:center;padding:28px">No candidates.</td></tr>';return}
+    body.innerHTML=top5.map((x,i)=>`<tr class="data" data-i="${i}">
+      <td>${i+1}</td>
+      <td class="namecell"><b>${escapeHtml(x.ticker)}</b><small>${escapeHtml(x.company)}</small></td>
+      <td><span class="scorechip">${num(x.score)}</span></td>
+      <td><span class="badge ${advClass(x.advisory)}">${escapeHtml(x.advisory)}</span></td>
+      <td>${sparkSVG(x.sparkline)}</td>
+      <td class="${cls(x.ret_126)}">${pct(x.ret_126)}</td>
+      <td>${pct(x.volatility_63)}</td>
+      <td>${x.forward_pe==null?'—':`${num(x.forward_pe)}×`}</td>
+    </tr>`).join('');
+    body.querySelectorAll('tr.data').forEach(tr=>tr.addEventListener('click',()=>showDetail(top5[+tr.dataset.i])));
+  }
+
+  function renderTables(){
+    renderMarketTable('canadaRankBody',state.data?.canada);
+    renderMarketTable('usRankBody',state.data?.us);
+  }
+
+  function showDetail(x){
+    const boxes=[
+      ['1M return',pct(x.ret_21)],['3M return',pct(x.ret_63)],['6M return',pct(x.ret_126)],['RSI 14',num(x.rsi_14)],
+      ['Quality',`${num(x.fundamental_score)}/100`],['Balance',`${num(x.balance_score)}/100`],['Valuation',`${num(x.valuation_score)}/100`],['Beta',num(x.beta,2)],
+      ['Revenue growth',pct(x.revenue_growth)],['Earnings growth',pct(x.earnings_growth)],['Profit margin',pct(x.profit_margin)],['Analyst upside',pct(x.analyst_upside)]
+    ];
+    let extra='';
+    if(state.horizon==='day_trade')extra=`<div class="detail-box"><span>Intraday 1H</span><b>${pct(x.intraday_ret_1h,2)}</b></div><div class="detail-box"><span>Intraday volume</span><b>${x.intraday_volume_accel==null?'—':`${num(x.intraday_volume_accel,2)}×`}</b></div>`;
+    const news=(x.headlines||[]).map(n=>`<div>• ${escapeHtml(n.title)}${n.publisher?` <span style="color:var(--muted)">— ${escapeHtml(n.publisher)}</span>`:''}</div>`).join('')||'<div>No headlines returned for this symbol.</div>';
+    $('detailPanel').innerHTML=`<div style="display:flex;justify-content:space-between;gap:12px;margin-bottom:12px"><div><b>${escapeHtml(x.ticker)} · ${escapeHtml(x.company)}</b><div style="color:var(--muted);font-size:11px;margin-top:3px">${escapeHtml(x.sector)} · ${escapeHtml(x.market)}</div></div><span class="badge ${advClass(x.advisory)}">${escapeHtml(x.advisory)}</span></div><div class="detail-grid">${boxes.map(([k,v])=>`<div class="detail-box"><span>${k}</span><b>${v}</b></div>`).join('')}${extra}</div><div class="news"><h4>Recent headlines · context only</h4>${news}</div>`;
+    $('detailPanel').classList.add('open');
+  }
+
+  function renderMethod(){const m=state.data?.methodology;if(!m)return;$('wTech').textContent=`${m.technical_weight}%`;$('wQual').textContent=`${m.quality_weight}%`;$('wBal').textContent=`${m.balance_weight}%`;$('wVal').textContent=`${m.valuation_weight}%`;$('methodNote').textContent=m.universe}
+  function render(){renderHero();renderTables();renderMethod();$('detailPanel').classList.remove('open')}
+
+  async function load(force=false){
+    $('errorBox').classList.remove('open');$('loadingBox').classList.add('open');$('runBtn').disabled=true;$('refreshBtn').disabled=true;
+    try{
+      const q=new URLSearchParams({risk:state.risk,horizon:state.horizon,refresh:force?'1':'0'});
+      const r=await fetch(`/api/advice?${q}`);const j=await r.json();if(!r.ok)throw new Error(j.error||'Backend request failed');state.data=j;render();$('backendStatus').textContent='Python backend connected';
+    }catch(e){$('errorBox').textContent=`Could not run advisory: ${e.message}`;$('errorBox').classList.add('open');$('backendStatus').textContent='Backend error';}
+    finally{$('loadingBox').classList.remove('open');$('runBtn').disabled=false;$('refreshBtn').disabled=false}
+  }
+  $('runBtn').addEventListener('click',()=>load(false));$('refreshBtn').addEventListener('click',()=>load(true));
+
+  // The requested default profile: low risk + long term.
+  load(false);
+</script>
+</body>
+</html>
